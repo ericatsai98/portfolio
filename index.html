@@ -684,8 +684,8 @@
 
   /* Scroll reveal */
   .reveal {
-    opacity: 0;
-    transform: translateY(32px);
+    opacity: 1;
+    transform: translateY(0);
     transition: opacity 0.7s ease, transform 0.7s ease;
   }
   .reveal.visible {
@@ -728,7 +728,7 @@
   <div class="hero-content">
     <p class="hero-tag">數位行政 × AI 工具應用專員</p>
     <h1 class="hero-name">
-      ERICA
+      YOUR
       <span class="line2">NAME.</span>
     </h1>
     <p class="hero-title">
@@ -993,7 +993,7 @@
 
 <!-- FOOTER -->
 <footer>
-  <p>© 2026 YOUR TSAI — 數位行政 × AI 工具應用</p>
+  <p>© 2026 YOUR NAME — 數位行政 × AI 工具應用</p>
   <p>BUILT WITH AI COLLABORATION</p>
 </footer>
 
@@ -1035,11 +1035,27 @@
     });
   });
 
-// Scroll reveal - fixed
-const revealEls = document.querySelectorAll('.reveal');
-revealEls.forEach((el, i) => {
-  setTimeout(() => el.classList.add('visible'), i * 80);
-});
+  // Scroll reveal - reliable with fallback
+  const revealEls = document.querySelectorAll('.reveal');
+  function showAll() {
+    revealEls.forEach((el, i) => setTimeout(() => el.classList.add('visible'), i * 50));
+  }
+  if ('IntersectionObserver' in window) {
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('visible');
+          observer.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.05, rootMargin: '0px 0px -20px 0px' });
+    revealEls.forEach(el => observer.observe(el));
+    setTimeout(() => {
+      document.querySelectorAll('.reveal:not(.visible)').forEach((el, i) => {
+        setTimeout(() => el.classList.add('visible'), i * 50);
+      });
+    }, 1200);
+  } else { showAll(); }
 
   // Nav active link highlight
   const sections = document.querySelectorAll('section[id]');
