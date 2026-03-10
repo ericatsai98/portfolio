@@ -1,0 +1,1301 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>貿易報價管理系統 | TradeQuote Pro</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;600;700&family=Playfair+Display:wght@600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+:root {
+  --navy: #0f2040;
+  --navy-mid: #1a3560;
+  --navy-light: #254880;
+  --gold: #c9a84c;
+  --gold-light: #e8c97a;
+  --gold-pale: #fdf6e3;
+  --white: #ffffff;
+  --off-white: #f8f9fc;
+  --gray-50: #f1f3f8;
+  --gray-100: #e2e6ef;
+  --gray-300: #b0bace;
+  --gray-500: #6b7a99;
+  --gray-700: #3d4d6a;
+  --text: #1a2540;
+  --text-light: #4a5a78;
+  --danger: #c0392b;
+  --success: #1a7a4a;
+  --shadow-sm: 0 1px 3px rgba(15,32,64,0.08);
+  --shadow-md: 0 4px 16px rgba(15,32,64,0.10);
+  --shadow-lg: 0 8px 32px rgba(15,32,64,0.13);
+  --radius: 4px;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: 'Noto Sans TC', sans-serif;
+  background: var(--off-white);
+  color: var(--text);
+  min-height: 100vh;
+  font-size: 14px;
+}
+
+/* ── TOP HEADER BAR ── */
+.top-bar {
+  background: var(--navy);
+  color: white;
+  padding: 0 40px;
+  height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.2);
+}
+
+.logo-area {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.logo-mark {
+  width: 32px; height: 32px;
+  background: var(--gold);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Playfair Display', serif;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--navy);
+  clip-path: polygon(0 0, 85% 0, 100% 15%, 100% 100%, 0 100%);
+}
+
+.logo-text {
+  font-family: 'Playfair Display', serif;
+  font-size: 18px;
+  letter-spacing: 0.04em;
+  color: white;
+}
+
+.logo-sub {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  color: var(--gold-light);
+  opacity: 0.8;
+  margin-top: 1px;
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+}
+
+.quote-id-badge {
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  color: var(--gold-light);
+  letter-spacing: 0.1em;
+  padding: 4px 12px;
+  border: 1px solid rgba(201,168,76,0.3);
+  background: rgba(201,168,76,0.08);
+}
+
+.status-badge {
+  font-size: 11px;
+  font-weight: 500;
+  padding: 4px 12px;
+  background: rgba(26,122,74,0.25);
+  color: #6ee4a4;
+  letter-spacing: 0.05em;
+  border: 1px solid rgba(110,228,164,0.2);
+}
+
+/* ── MAIN LAYOUT ── */
+.main-wrapper {
+  max-width: 1240px;
+  margin: 0 auto;
+  padding: 32px 40px 80px;
+}
+
+/* ── SECTION CARD ── */
+.card {
+  background: var(--white);
+  border: 1px solid var(--gray-100);
+  box-shadow: var(--shadow-sm);
+  margin-bottom: 20px;
+  overflow: hidden;
+}
+
+.card-header {
+  background: var(--navy);
+  padding: 14px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.card-header.gold-line {
+  border-left: 3px solid var(--gold);
+}
+
+.card-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: white;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.card-title .icon {
+  font-size: 14px;
+  opacity: 0.8;
+}
+
+.card-body {
+  padding: 24px;
+}
+
+/* ── FORM GRID ── */
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px 24px;
+}
+
+.form-grid.col-2 { grid-template-columns: repeat(2, 1fr); }
+.form-grid.col-4 { grid-template-columns: repeat(4, 1fr); }
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.form-group.span-2 { grid-column: span 2; }
+.form-group.span-3 { grid-column: span 3; }
+
+label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--gray-500);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+label .required {
+  color: var(--gold);
+  margin-left: 2px;
+}
+
+input, select, textarea {
+  width: 100%;
+  padding: 9px 12px;
+  border: 1px solid var(--gray-100);
+  background: var(--off-white);
+  color: var(--text);
+  font-family: 'Noto Sans TC', sans-serif;
+  font-size: 13px;
+  outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
+  border-radius: var(--radius);
+}
+
+input:focus, select:focus, textarea:focus {
+  border-color: var(--navy-light);
+  background: white;
+  box-shadow: 0 0 0 3px rgba(37,72,128,0.08);
+}
+
+textarea { resize: vertical; min-height: 72px; }
+
+/* ── PRODUCT TABLE ── */
+.table-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.table-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.table-wrapper {
+  overflow-x: auto;
+  border: 1px solid var(--gray-100);
+  border-radius: var(--radius);
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 900px;
+}
+
+thead {
+  background: var(--navy);
+}
+
+thead th {
+  padding: 11px 14px;
+  text-align: left;
+  font-size: 11px;
+  font-weight: 600;
+  color: rgba(255,255,255,0.7);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  border-right: 1px solid rgba(255,255,255,0.06);
+}
+
+thead th:last-child { border-right: none; }
+
+thead th.num { text-align: right; }
+
+tbody tr {
+  border-bottom: 1px solid var(--gray-50);
+  transition: background 0.12s;
+}
+tbody tr:last-child { border-bottom: none; }
+tbody tr:hover { background: #f5f7fc; }
+
+tbody td {
+  padding: 8px 10px;
+  vertical-align: middle;
+  border-right: 1px solid var(--gray-50);
+}
+tbody td:last-child { border-right: none; }
+
+tbody td input, tbody td select {
+  padding: 7px 10px;
+  font-size: 13px;
+  border-color: transparent;
+  background: transparent;
+}
+tbody td input:focus, tbody td select:focus {
+  border-color: var(--navy-light);
+  background: white;
+}
+
+.row-num {
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  color: var(--gray-300);
+  text-align: center;
+  width: 36px;
+}
+
+.amount-cell {
+  font-family: 'DM Mono', monospace;
+  font-size: 13px;
+  color: var(--navy);
+  font-weight: 500;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.del-btn {
+  width: 28px; height: 28px;
+  background: none;
+  border: 1px solid var(--gray-100);
+  color: var(--gray-300);
+  cursor: pointer;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius);
+  transition: all 0.15s;
+}
+.del-btn:hover {
+  background: #fdf0f0;
+  border-color: #e0a0a0;
+  color: var(--danger);
+}
+
+/* ── SUMMARY FOOTER ── */
+.summary-footer {
+  display: grid;
+  grid-template-columns: 1fr 380px;
+  gap: 24px;
+  align-items: start;
+  margin-top: 20px;
+}
+
+.remarks-area {}
+
+.totals-panel {
+  background: var(--navy);
+  padding: 0;
+  overflow: hidden;
+}
+
+.totals-header {
+  background: var(--gold);
+  padding: 10px 20px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  color: var(--navy);
+  text-transform: uppercase;
+}
+
+.totals-body {
+  padding: 16px 20px;
+}
+
+.totals-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0;
+  border-bottom: 1px solid rgba(255,255,255,0.07);
+}
+.totals-row:last-child { border-bottom: none; }
+
+.totals-label {
+  font-size: 12px;
+  color: rgba(255,255,255,0.55);
+  letter-spacing: 0.03em;
+}
+
+.totals-value {
+  font-family: 'DM Mono', monospace;
+  font-size: 13px;
+  color: rgba(255,255,255,0.85);
+}
+
+.totals-row.grand {
+  margin-top: 8px;
+  padding-top: 16px;
+  border-top: 1px solid var(--gold);
+  border-bottom: none;
+}
+
+.totals-row.grand .totals-label {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--gold-light);
+  letter-spacing: 0.05em;
+}
+
+.totals-row.grand .totals-value {
+  font-size: 20px;
+  font-weight: 500;
+  color: var(--gold);
+}
+
+/* ── CHARGE ROWS ── */
+.charges-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.charge-item {
+  background: var(--gray-50);
+  border: 1px solid var(--gray-100);
+  padding: 14px 16px;
+  border-left: 3px solid var(--gray-300);
+  transition: border-left-color 0.2s;
+}
+
+.charge-item:focus-within {
+  border-left-color: var(--gold);
+  background: var(--gold-pale);
+}
+
+.charge-label {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--gray-500);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  margin-bottom: 6px;
+}
+
+.charge-item input {
+  background: transparent;
+  border: none;
+  padding: 0;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--navy);
+  font-family: 'DM Mono', monospace;
+}
+.charge-item input:focus {
+  box-shadow: none;
+  border: none;
+}
+
+/* ── BUTTONS ── */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 9px 18px;
+  font-family: 'Noto Sans TC', sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  border: none;
+  border-radius: var(--radius);
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+
+.btn-navy {
+  background: var(--navy);
+  color: white;
+}
+.btn-navy:hover { background: var(--navy-light); box-shadow: var(--shadow-md); }
+
+.btn-gold {
+  background: var(--gold);
+  color: var(--navy);
+}
+.btn-gold:hover { background: var(--gold-light); box-shadow: var(--shadow-md); }
+
+.btn-outline {
+  background: white;
+  color: var(--navy);
+  border: 1px solid var(--gray-100);
+}
+.btn-outline:hover { border-color: var(--navy); background: var(--gray-50); }
+
+.btn-sm { padding: 6px 12px; font-size: 11px; }
+
+.btn-danger-outline {
+  background: white;
+  color: var(--danger);
+  border: 1px solid #f0c0bc;
+}
+.btn-danger-outline:hover { background: #fdf0f0; }
+
+/* ── ACTION BAR ── */
+.action-bar {
+  background: white;
+  border: 1px solid var(--gray-100);
+  padding: 16px 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: var(--shadow-md);
+  position: sticky;
+  bottom: 0;
+  z-index: 50;
+  margin-top: 24px;
+}
+
+.action-bar-left {
+  font-size: 12px;
+  color: var(--gray-500);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.action-bar-right {
+  display: flex;
+  gap: 10px;
+}
+
+/* ── TOAST ── */
+.toast {
+  position: fixed;
+  top: 72px;
+  right: 24px;
+  background: var(--navy);
+  color: white;
+  padding: 12px 20px;
+  border-left: 3px solid var(--gold);
+  font-size: 13px;
+  z-index: 999;
+  box-shadow: var(--shadow-lg);
+  transform: translateX(120%);
+  transition: transform 0.3s ease;
+  max-width: 320px;
+}
+.toast.show { transform: translateX(0); }
+.toast.success { border-left-color: #4ade80; }
+.toast.error { border-left-color: #f87171; }
+
+/* ── DIVIDER ── */
+.section-divider {
+  height: 1px;
+  background: linear-gradient(to right, var(--gold), transparent);
+  margin: 8px 0 20px;
+  opacity: 0.4;
+}
+
+/* ── PAYMENT TERMS ── */
+.terms-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+
+.term-chip {
+  padding: 8px 12px;
+  border: 1px solid var(--gray-100);
+  background: var(--off-white);
+  font-size: 12px;
+  color: var(--text-light);
+  cursor: pointer;
+  text-align: center;
+  transition: all 0.15s;
+  border-radius: var(--radius);
+}
+.term-chip:hover { border-color: var(--gold); color: var(--navy); }
+.term-chip.active {
+  background: var(--navy);
+  color: var(--gold-light);
+  border-color: var(--navy);
+  font-weight: 600;
+}
+
+/* ── PRINT STYLES ── */
+@media print {
+  .top-bar, .action-bar, .table-actions, .del-btn, .btn { display: none !important; }
+  body { background: white; }
+  .card { box-shadow: none; break-inside: avoid; }
+}
+
+/* ── PROGRESS INDICATOR ── */
+.progress-bar {
+  height: 3px;
+  background: var(--gray-100);
+  margin-bottom: 28px;
+  border-radius: 2px;
+  overflow: hidden;
+}
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(to right, var(--navy), var(--gold));
+  width: 0%;
+  transition: width 0.4s ease;
+  border-radius: 2px;
+}
+
+/* ── STATS ROW ── */
+.stats-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1px;
+  background: var(--gray-100);
+  border: 1px solid var(--gray-100);
+  margin-bottom: 20px;
+  overflow: hidden;
+}
+
+.stat-box {
+  background: white;
+  padding: 16px 20px;
+  text-align: center;
+}
+
+.stat-box .val {
+  font-family: 'DM Mono', monospace;
+  font-size: 22px;
+  font-weight: 500;
+  color: var(--navy);
+  display: block;
+  line-height: 1;
+  margin-bottom: 4px;
+}
+
+.stat-box .lbl {
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  color: var(--gray-500);
+  text-transform: uppercase;
+}
+
+/* ── CURRENCY SELECTOR ── */
+.currency-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.currency-btn {
+  padding: 6px 14px;
+  font-size: 12px;
+  font-family: 'DM Mono', monospace;
+  font-weight: 500;
+  border: 1px solid var(--gray-100);
+  background: white;
+  color: var(--gray-500);
+  cursor: pointer;
+  border-radius: var(--radius);
+  transition: all 0.15s;
+  letter-spacing: 0.05em;
+}
+.currency-btn.active {
+  background: var(--navy);
+  color: var(--gold-light);
+  border-color: var(--navy);
+}
+
+.currency-label {
+  font-size: 11px;
+  color: var(--gray-500);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+</style>
+</head>
+<body>
+
+<div class="toast" id="toast"></div>
+
+<!-- TOP HEADER -->
+<header class="top-bar">
+  <div class="logo-area">
+    <div class="logo-mark">T</div>
+    <div>
+      <div class="logo-text">TradeQuote Pro</div>
+      <div class="logo-sub">貿易報價管理系統</div>
+    </div>
+  </div>
+  <div class="header-right">
+    <div class="quote-id-badge" id="quoteIdDisplay">QT-2026-0001</div>
+    <div class="status-badge">● DRAFT</div>
+  </div>
+</header>
+
+<!-- MAIN -->
+<div class="main-wrapper">
+
+  <!-- PROGRESS -->
+  <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+
+  <!-- LIVE STATS ROW -->
+  <div class="stats-row">
+    <div class="stat-box">
+      <span class="val" id="statItems">0</span>
+      <span class="lbl">品項數量</span>
+    </div>
+    <div class="stat-box">
+      <span class="val" id="statQty">0</span>
+      <span class="lbl">總出貨數</span>
+    </div>
+    <div class="stat-box">
+      <span class="val" id="statSubtotal">0</span>
+      <span class="lbl">商品小計</span>
+    </div>
+    <div class="stat-box">
+      <span class="val" id="statGrand" style="color:var(--gold)">0</span>
+      <span class="lbl">含稅總計</span>
+    </div>
+  </div>
+
+  <!-- SECTION 1: 基本資訊 -->
+  <div class="card">
+    <div class="card-header gold-line">
+      <span class="card-title"><span class="icon">🏢</span> 報價基本資訊</span>
+      <span style="font-family:'DM Mono',monospace;font-size:11px;color:rgba(255,255,255,0.4);">SECTION 01</span>
+    </div>
+    <div class="card-body">
+      <div class="form-grid col-4" style="margin-bottom:20px;">
+        <div class="form-group">
+          <label>報價單號 <span class="required">*</span></label>
+          <input type="text" id="quoteNo" value="QT-2026-0001" oninput="updateQuoteId()" placeholder="QT-2026-XXXX">
+        </div>
+        <div class="form-group">
+          <label>報價日期 <span class="required">*</span></label>
+          <input type="date" id="quoteDate">
+        </div>
+        <div class="form-group">
+          <label>有效期限</label>
+          <input type="date" id="validDate">
+        </div>
+        <div class="form-group">
+          <label>交貨期限</label>
+          <input type="text" id="deliveryDays" placeholder="如：30天、FOB後45天">
+        </div>
+      </div>
+
+      <div class="section-divider"></div>
+
+      <div class="form-grid" style="margin-bottom:20px;">
+        <div class="form-group">
+          <label>客戶公司名稱 <span class="required">*</span></label>
+          <input type="text" id="clientName" placeholder="ABC International Co., Ltd." oninput="updateProgress()">
+        </div>
+        <div class="form-group">
+          <label>聯絡人</label>
+          <input type="text" id="contactPerson" placeholder="Mr. / Ms. 姓名">
+        </div>
+        <div class="form-group">
+          <label>聯絡 Email</label>
+          <input type="email" id="contactEmail" placeholder="contact@company.com">
+        </div>
+      </div>
+
+      <div class="form-grid">
+        <div class="form-group">
+          <label>出口商（我方）</label>
+          <input type="text" id="exporterName" placeholder="台灣貿易有限公司">
+        </div>
+        <div class="form-group">
+          <label>業務負責人</label>
+          <input type="text" id="salesRep" placeholder="業務姓名">
+        </div>
+        <div class="form-group">
+          <label>貿易條款</label>
+          <select id="tradeTerms">
+            <option value="">請選擇</option>
+            <option value="FOB">FOB — 船上交貨</option>
+            <option value="CIF">CIF — 含保險費及運費</option>
+            <option value="CFR">CFR — 成本加運費</option>
+            <option value="EXW">EXW — 工廠交貨</option>
+            <option value="DDP">DDP — 稅訖交貨</option>
+            <option value="DAP">DAP — 目的地交貨</option>
+          </select>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SECTION 2: 幣別 -->
+  <div class="card">
+    <div class="card-header gold-line">
+      <span class="card-title"><span class="icon">💱</span> 幣別設定</span>
+      <span style="font-family:'DM Mono',monospace;font-size:11px;color:rgba(255,255,255,0.4);">SECTION 02</span>
+    </div>
+    <div class="card-body">
+      <div class="currency-row">
+        <span class="currency-label">選擇幣別：</span>
+        <button class="currency-btn active" onclick="setCurrency('USD','US$')">USD</button>
+        <button class="currency-btn" onclick="setCurrency('TWD','NT$')">TWD</button>
+        <button class="currency-btn" onclick="setCurrency('EUR','€')">EUR</button>
+        <button class="currency-btn" onclick="setCurrency('JPY','¥')">JPY</button>
+        <button class="currency-btn" onclick="setCurrency('CNY','¥')">CNY</button>
+        <div class="form-group" style="flex:0 0 180px;margin:0;">
+          <input type="text" id="customCurrency" placeholder="自訂幣別代碼" oninput="setCurrency(this.value, this.value)" style="font-family:'DM Mono',monospace;">
+        </div>
+      </div>
+      <div style="font-size:12px;color:var(--gray-500);">目前幣別：<strong id="currencyDisplay" style="color:var(--navy);font-family:'DM Mono',monospace;">USD (US$)</strong></div>
+    </div>
+  </div>
+
+  <!-- SECTION 3: 商品明細 -->
+  <div class="card">
+    <div class="card-header gold-line">
+      <span class="card-title"><span class="icon">📦</span> 商品明細</span>
+      <div style="display:flex;gap:8px;">
+        <button class="btn btn-gold btn-sm" onclick="addRow()">＋ 新增品項</button>
+        <button class="btn btn-outline btn-sm" onclick="clearAllRows()">清除全部</button>
+      </div>
+    </div>
+    <div class="card-body">
+      <div class="table-wrapper">
+        <table id="productTable">
+          <thead>
+            <tr>
+              <th style="width:40px;">#</th>
+              <th style="min-width:160px;">品名 / 規格描述</th>
+              <th style="width:100px;">料號 / SKU</th>
+              <th style="width:80px;">包裝單位</th>
+              <th style="width:80px;" class="num">數量</th>
+              <th style="width:110px;" class="num">單價</th>
+              <th style="width:110px;" class="num">折扣 %</th>
+              <th style="width:130px;" class="num">小計</th>
+              <th style="width:40px;"></th>
+            </tr>
+          </thead>
+          <tbody id="productBody">
+          </tbody>
+        </table>
+      </div>
+      <div style="margin-top:12px;text-align:right;">
+        <button class="btn btn-outline btn-sm" onclick="addRow()">＋ 新增品項</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- SECTION 4: 費用加成 -->
+  <div class="card">
+    <div class="card-header gold-line">
+      <span class="card-title"><span class="icon">🚢</span> 費用加成項目</span>
+      <span style="font-family:'DM Mono',monospace;font-size:11px;color:rgba(255,255,255,0.4);">SECTION 04</span>
+    </div>
+    <div class="card-body">
+      <div class="charges-grid">
+        <div class="charge-item">
+          <div class="charge-label">海運 / 空運費</div>
+          <input type="number" id="freight" value="0" oninput="calcTotals()" min="0">
+        </div>
+        <div class="charge-item">
+          <div class="charge-label">保險費</div>
+          <input type="number" id="insurance" value="0" oninput="calcTotals()" min="0">
+        </div>
+        <div class="charge-item">
+          <div class="charge-label">包裝費</div>
+          <input type="number" id="packing" value="0" oninput="calcTotals()" min="0">
+        </div>
+        <div class="charge-item">
+          <div class="charge-label">其他費用</div>
+          <input type="number" id="otherFee" value="0" oninput="calcTotals()" min="0">
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap;">
+        <div style="display:flex;align-items:center;gap:8px;">
+          <label style="text-transform:none;font-size:13px;color:var(--text);">稅率 %</label>
+          <input type="number" id="taxRate" value="5" min="0" max="100" style="width:70px;" oninput="calcTotals()">
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <label style="text-transform:none;font-size:13px;color:var(--text);">折扣金額</label>
+          <input type="number" id="discountAmt" value="0" min="0" style="width:110px;" oninput="calcTotals()">
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SECTION 5: 付款與備註 -->
+  <div class="card">
+    <div class="card-header gold-line">
+      <span class="card-title"><span class="icon">📋</span> 付款條件與備註</span>
+      <span style="font-family:'DM Mono',monospace;font-size:11px;color:rgba(255,255,255,0.4);">SECTION 05</span>
+    </div>
+    <div class="card-body">
+      <div class="form-grid col-2" style="margin-bottom:20px;">
+        <div class="form-group">
+          <label>付款條件（快選）</label>
+          <div class="terms-grid" style="margin-top:4px;">
+            <div class="term-chip" onclick="setTerm(this,'T/T 30天前付清')">T/T 30天</div>
+            <div class="term-chip" onclick="setTerm(this,'L/C at sight')">L/C 即期</div>
+            <div class="term-chip" onclick="setTerm(this,'預付30% 餘款出貨前付清')">預付30%</div>
+            <div class="term-chip" onclick="setTerm(this,'D/P at sight')">D/P 即期</div>
+            <div class="term-chip" onclick="setTerm(this,'貨到後30天付款')">到貨30天</div>
+            <div class="term-chip" onclick="setTerm(this,'月結60天')">月結60天</div>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>付款條件（自訂）</label>
+          <textarea id="paymentTerms" placeholder="詳細付款條件說明..." style="min-height:88px;"></textarea>
+        </div>
+      </div>
+      <div class="form-grid col-2">
+        <div class="form-group">
+          <label>備註 / 特別說明</label>
+          <textarea id="remarks" placeholder="如：特殊包裝要求、認證需求、品質標準..." style="min-height:80px;"></textarea>
+        </div>
+        <div class="form-group">
+          <label>內部備忘（不匯出給客戶）</label>
+          <textarea id="internalNote" placeholder="成本計算、利潤分析、客戶談判紀錄..." style="min-height:80px;background:#fff8f0;border-color:#f0d8b0;"></textarea>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SUMMARY FOOTER -->
+  <div class="summary-footer">
+    <div>
+      <div style="font-size:11px;font-weight:600;color:var(--gray-500);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:12px;">報價摘要確認</div>
+      <div style="background:var(--gray-50);border:1px solid var(--gray-100);padding:16px 20px;font-size:13px;line-height:2;color:var(--text-light);" id="summaryText">
+        請填入報價資訊後將自動生成摘要...
+      </div>
+    </div>
+    <div class="totals-panel">
+      <div class="totals-header">💰 金額總計</div>
+      <div class="totals-body">
+        <div class="totals-row">
+          <span class="totals-label">商品小計</span>
+          <span class="totals-value" id="t-subtotal">— 0.00</span>
+        </div>
+        <div class="totals-row">
+          <span class="totals-label">運費 / 保險 / 包裝</span>
+          <span class="totals-value" id="t-charges">— 0.00</span>
+        </div>
+        <div class="totals-row">
+          <span class="totals-label">折扣</span>
+          <span class="totals-value" id="t-discount" style="color:#f87171;">— 0.00</span>
+        </div>
+        <div class="totals-row">
+          <span class="totals-label">稅前合計</span>
+          <span class="totals-value" id="t-pretax">— 0.00</span>
+        </div>
+        <div class="totals-row">
+          <span class="totals-label" id="taxLabel">稅額 (5%)</span>
+          <span class="totals-value" id="t-tax">— 0.00</span>
+        </div>
+        <div class="totals-row grand">
+          <span class="totals-label">含稅總價</span>
+          <span class="totals-value" id="t-grand">— 0.00</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ACTION BAR -->
+  <div class="action-bar">
+    <div class="action-bar-left">
+      <span>⚡</span>
+      <span id="actionStatus">已自動計算 — 所有金額即時更新</span>
+    </div>
+    <div class="action-bar-right">
+      <button class="btn btn-outline" onclick="resetForm()">🔄 重新填寫</button>
+      <button class="btn btn-navy" onclick="exportExcelClient()">📄 匯出客戶版 Excel</button>
+      <button class="btn btn-gold" onclick="exportExcelDetail()">📊 匯出完整版 Excel</button>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ── STATE ──
+let currency = 'USD';
+let currencySymbol = 'US$';
+let rowCount = 0;
+
+// ── INIT ──
+document.addEventListener('DOMContentLoaded', () => {
+  const today = new Date();
+  document.getElementById('quoteDate').value = today.toISOString().split('T')[0];
+  const valid = new Date(today); valid.setDate(valid.getDate() + 30);
+  document.getElementById('validDate').value = valid.toISOString().split('T')[0];
+  addRow(); addRow(); addRow();
+  calcTotals();
+  updateProgress();
+});
+
+// ── CURRENCY ──
+function setCurrency(code, symbol) {
+  currency = code; currencySymbol = symbol;
+  document.getElementById('currencyDisplay').textContent = `${code} (${symbol})`;
+  document.querySelectorAll('.currency-btn').forEach(b => b.classList.remove('active'));
+  calcTotals();
+}
+
+// ── ROW MANAGEMENT ──
+function addRow() {
+  rowCount++;
+  const tbody = document.getElementById('productBody');
+  const tr = document.createElement('tr');
+  tr.dataset.rowId = rowCount;
+  tr.innerHTML = `
+    <td class="row-num">${tbody.rows.length + 1}</td>
+    <td><input type="text" placeholder="商品名稱 / 規格說明" oninput="updateSummary()"></td>
+    <td><input type="text" placeholder="SKU-001" style="font-family:'DM Mono',monospace;font-size:12px;"></td>
+    <td>
+      <select style="font-size:12px;">
+        <option>PCS</option><option>SET</option><option>BOX</option>
+        <option>CTN</option><option>KG</option><option>MT</option>
+        <option>M²</option><option>LOT</option>
+      </select>
+    </td>
+    <td><input type="number" value="1" min="0" oninput="calcRow(this)" style="text-align:right;"></td>
+    <td><input type="number" value="0" min="0" step="0.01" oninput="calcRow(this)" style="text-align:right;"></td>
+    <td><input type="number" value="0" min="0" max="100" step="0.1" oninput="calcRow(this)" style="text-align:right;"></td>
+    <td class="amount-cell" id="row-amt-${rowCount}">${currencySymbol} 0.00</td>
+    <td><button class="del-btn" onclick="deleteRow(this)" title="刪除此行">✕</button></td>
+  `;
+  tbody.appendChild(tr);
+  reNumberRows();
+  calcTotals();
+  updateProgress();
+}
+
+function deleteRow(btn) {
+  btn.closest('tr').remove();
+  reNumberRows();
+  calcTotals();
+  updateProgress();
+}
+
+function clearAllRows() {
+  if (!confirm('確定要清除所有品項？')) return;
+  document.getElementById('productBody').innerHTML = '';
+  rowCount = 0;
+  calcTotals();
+  updateProgress();
+}
+
+function reNumberRows() {
+  document.querySelectorAll('#productBody tr').forEach((tr, i) => {
+    tr.querySelector('.row-num').textContent = i + 1;
+  });
+}
+
+function calcRow(input) {
+  const tr = input.closest('tr');
+  const cells = tr.querySelectorAll('input[type="number"]');
+  const qty = parseFloat(cells[0].value) || 0;
+  const price = parseFloat(cells[1].value) || 0;
+  const disc = parseFloat(cells[2].value) || 0;
+  const amt = qty * price * (1 - disc / 100);
+  const amtCell = tr.querySelector('.amount-cell');
+  if (amtCell) amtCell.textContent = `${currencySymbol} ${formatNum(amt)}`;
+  calcTotals();
+}
+
+// ── TOTALS ──
+function calcTotals() {
+  let subtotal = 0;
+  let totalQty = 0;
+  let itemCount = 0;
+
+  document.querySelectorAll('#productBody tr').forEach(tr => {
+    const inputs = tr.querySelectorAll('input[type="number"]');
+    const qty = parseFloat(inputs[0]?.value) || 0;
+    const price = parseFloat(inputs[1]?.value) || 0;
+    const disc = parseFloat(inputs[2]?.value) || 0;
+    const amt = qty * price * (1 - disc / 100);
+    const amtCell = tr.querySelector('.amount-cell');
+    if (amtCell) amtCell.textContent = `${currencySymbol} ${formatNum(amt)}`;
+    subtotal += amt;
+    totalQty += qty;
+    if (price > 0) itemCount++;
+  });
+
+  const freight = parseFloat(document.getElementById('freight').value) || 0;
+  const insurance = parseFloat(document.getElementById('insurance').value) || 0;
+  const packing = parseFloat(document.getElementById('packing').value) || 0;
+  const otherFee = parseFloat(document.getElementById('otherFee').value) || 0;
+  const charges = freight + insurance + packing + otherFee;
+
+  const discountAmt = parseFloat(document.getElementById('discountAmt').value) || 0;
+  const taxRate = parseFloat(document.getElementById('taxRate').value) || 0;
+
+  const pretax = subtotal + charges - discountAmt;
+  const tax = pretax * taxRate / 100;
+  const grand = pretax + tax;
+
+  // Update display
+  const s = currencySymbol;
+  document.getElementById('t-subtotal').textContent = `${s} ${formatNum(subtotal)}`;
+  document.getElementById('t-charges').textContent = `${s} ${formatNum(charges)}`;
+  document.getElementById('t-discount').textContent = `- ${s} ${formatNum(discountAmt)}`;
+  document.getElementById('t-pretax').textContent = `${s} ${formatNum(pretax)}`;
+  document.getElementById('taxLabel').textContent = `稅額 (${taxRate}%)`;
+  document.getElementById('t-tax').textContent = `${s} ${formatNum(tax)}`;
+  document.getElementById('t-grand').textContent = `${s} ${formatNum(grand)}`;
+
+  // Stats row
+  document.getElementById('statItems').textContent = document.querySelectorAll('#productBody tr').length;
+  document.getElementById('statQty').textContent = Math.round(totalQty).toLocaleString();
+  document.getElementById('statSubtotal').textContent = `${s}${formatNum(subtotal)}`;
+  document.getElementById('statGrand').textContent = `${s}${formatNum(grand)}`;
+
+  updateSummary(subtotal, grand);
+  updateProgress();
+}
+
+function formatNum(n) {
+  return n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+// ── SUMMARY TEXT ──
+function updateSummary(subtotal, grand) {
+  const client = document.getElementById('clientName').value || '（待填入客戶名稱）';
+  const date = document.getElementById('quoteDate').value || '—';
+  const terms = document.getElementById('tradeTerms').value || '—';
+  const rows = document.querySelectorAll('#productBody tr').length;
+  const s = currencySymbol;
+  const gt = grand !== undefined ? `${s} ${formatNum(grand)}` : '—';
+
+  document.getElementById('summaryText').innerHTML = `
+    <strong>客戶：</strong>${client}<br>
+    <strong>報價日期：</strong>${date}<br>
+    <strong>貿易條款：</strong>${terms}<br>
+    <strong>品項數：</strong>${rows} 項<br>
+    <strong>含稅總價：</strong><span style="color:var(--navy);font-weight:700;">${gt}</span>
+  `;
+}
+
+// ── PROGRESS ──
+function updateProgress() {
+  const fields = ['clientName', 'quoteDate', 'tradeTerms', 'salesRep'];
+  const filled = fields.filter(id => document.getElementById(id)?.value).length;
+  const rows = document.querySelectorAll('#productBody tr').length;
+  const hasItems = [...document.querySelectorAll('#productBody input[type="number"]')]
+    .some((inp, i) => i % 3 === 1 && parseFloat(inp.value) > 0);
+  const score = (filled / fields.length) * 60 + (rows > 0 ? 20 : 0) + (hasItems ? 20 : 0);
+  document.getElementById('progressFill').style.width = score + '%';
+}
+
+// ── PAYMENT TERMS ──
+function setTerm(el, text) {
+  document.querySelectorAll('.term-chip').forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('paymentTerms').value = text;
+}
+
+// ── QUOTE ID ──
+function updateQuoteId() {
+  const val = document.getElementById('quoteNo').value;
+  document.getElementById('quoteIdDisplay').textContent = val || 'QT-—';
+}
+
+// ── RESET ──
+function resetForm() {
+  if (!confirm('確定要重新填寫？所有資料將清除。')) return;
+  document.querySelectorAll('input[type="text"], input[type="email"], input[type="number"], textarea, select').forEach(el => {
+    if (el.type === 'number') el.value = el.id === 'taxRate' ? '5' : '0';
+    else if (el.tagName === 'SELECT') el.selectedIndex = 0;
+    else el.value = '';
+  });
+  document.getElementById('quoteNo').value = 'QT-2026-' + String(Math.floor(Math.random()*9000)+1000);
+  document.getElementById('productBody').innerHTML = '';
+  rowCount = 0;
+  addRow(); addRow(); addRow();
+  const today = new Date();
+  document.getElementById('quoteDate').value = today.toISOString().split('T')[0];
+  calcTotals();
+  showToast('表單已重置', 'success');
+}
+
+// ── EXPORT ──
+function getTableData(includeInternal = false) {
+  const rows = [];
+  document.querySelectorAll('#productBody tr').forEach((tr, i) => {
+    const inputs = tr.querySelectorAll('input, select');
+    const qty = parseFloat(inputs[3]?.value) || 0;
+    const price = parseFloat(inputs[4]?.value) || 0;
+    const disc = parseFloat(inputs[5]?.value) || 0;
+    const amt = qty * price * (1 - disc / 100);
+    rows.push({
+      '#': i + 1,
+      '品名/規格': inputs[0]?.value || '',
+      '料號SKU': inputs[1]?.value || '',
+      '單位': inputs[2]?.value || 'PCS',
+      '數量': qty,
+      [`單價(${currency})`]: price,
+      '折扣%': disc,
+      [`小計(${currency})`]: parseFloat(amt.toFixed(2))
+    });
+  });
+  return rows;
+}
+
+function exportExcelClient() {
+  const wb = XLSX.utils.book_new();
+
+  // Header info
+  const info = [
+    ['TradeQuote Pro — 貿易報價單'],
+    [],
+    ['報價單號', document.getElementById('quoteNo').value],
+    ['報價日期', document.getElementById('quoteDate').value],
+    ['有效期限', document.getElementById('validDate').value],
+    ['客戶名稱', document.getElementById('clientName').value],
+    ['聯絡人', document.getElementById('contactPerson').value],
+    ['貿易條款', document.getElementById('tradeTerms').value],
+    ['交貨期限', document.getElementById('deliveryDays').value],
+    ['付款條件', document.getElementById('paymentTerms').value],
+    [],
+    ['— 商品明細 —'],
+  ];
+
+  const headers = ['#','品名/規格','料號SKU','單位','數量',`單價(${currency})`,'折扣%',`小計(${currency})`];
+  const dataRows = getTableData(false).map(r => Object.values(r));
+
+  const freight = parseFloat(document.getElementById('freight').value)||0;
+  const insurance = parseFloat(document.getElementById('insurance').value)||0;
+  const packing = parseFloat(document.getElementById('packing').value)||0;
+  const other = parseFloat(document.getElementById('otherFee').value)||0;
+  const sub = dataRows.reduce((s,r)=>s+r[7],0);
+  const charges = freight+insurance+packing+other;
+  const disc = parseFloat(document.getElementById('discountAmt').value)||0;
+  const tax = parseFloat(document.getElementById('taxRate').value)||0;
+  const pretax = sub+charges-disc;
+  const taxAmt = pretax*tax/100;
+  const grand = pretax+taxAmt;
+
+  const totals = [
+    [],
+    ['','','','','','','商品小計', sub.toFixed(2)],
+    ['','','','','','','運費/保險/包裝', charges.toFixed(2)],
+    ['','','','','','','折扣', `-${disc.toFixed(2)}`],
+    ['','','','','','','稅前合計', pretax.toFixed(2)],
+    ['','','','','','',`稅額(${tax}%)`, taxAmt.toFixed(2)],
+    ['','','','','','','含稅總價', grand.toFixed(2)],
+    [],
+    ['備註', document.getElementById('remarks').value],
+  ];
+
+  const allRows = [...info, headers, ...dataRows, ...totals];
+  const ws = XLSX.utils.aoa_to_sheet(allRows);
+  ws['!cols'] = [{wch:4},{wch:28},{wch:14},{wch:8},{wch:8},{wch:12},{wch:8},{wch:14}];
+  XLSX.utils.book_append_sheet(wb, ws, '報價單');
+  XLSX.writeFile(wb, `${document.getElementById('quoteNo').value}_客戶版.xlsx`);
+  showToast('✅ 客戶版 Excel 已匯出', 'success');
+}
+
+function exportExcelDetail() {
+  const wb = XLSX.utils.book_new();
+  const info = [
+    ['TradeQuote Pro — 完整報價明細（含內部資訊）'],
+    [],
+    ['報價單號', document.getElementById('quoteNo').value],
+    ['報價日期', document.getElementById('quoteDate').value],
+    ['客戶名稱', document.getElementById('clientName').value],
+    ['業務負責人', document.getElementById('salesRep').value],
+    ['貿易條款', document.getElementById('tradeTerms').value],
+    ['付款條件', document.getElementById('paymentTerms').value],
+    [],
+    ['— 商品明細 —'],
+  ];
+  const headers = ['#','品名/規格','料號SKU','單位','數量',`單價(${currency})`,'折扣%',`小計(${currency})`];
+  const dataRows = getTableData(true).map(r => Object.values(r));
+  const freight = parseFloat(document.getElementById('freight').value)||0;
+  const insurance = parseFloat(document.getElementById('insurance').value)||0;
+  const packing = parseFloat(document.getElementById('packing').value)||0;
+  const other = parseFloat(document.getElementById('otherFee').value)||0;
+  const sub = dataRows.reduce((s,r)=>s+r[7],0);
+  const charges = freight+insurance+packing+other;
+  const disc = parseFloat(document.getElementById('discountAmt').value)||0;
+  const tax = parseFloat(document.getElementById('taxRate').value)||0;
+  const pretax = sub+charges-disc;
+  const taxAmt = pretax*tax/100;
+  const grand = pretax+taxAmt;
+
+  const totals = [
+    [],
+    ['','','','','','','商品小計', sub.toFixed(2)],
+    ['','','','','','','海運費', freight.toFixed(2)],
+    ['','','','','','','保險費', insurance.toFixed(2)],
+    ['','','','','','','包裝費', packing.toFixed(2)],
+    ['','','','','','','其他費用', other.toFixed(2)],
+    ['','','','','','','折扣', `-${disc.toFixed(2)}`],
+    ['','','','','','','含稅總價', grand.toFixed(2)],
+    [],
+    ['備註', document.getElementById('remarks').value],
+    ['內部備忘', document.getElementById('internalNote').value],
+  ];
+
+  const allRows = [...info, headers, ...dataRows, ...totals];
+  const ws = XLSX.utils.aoa_to_sheet(allRows);
+  ws['!cols'] = [{wch:4},{wch:28},{wch:14},{wch:8},{wch:8},{wch:12},{wch:8},{wch:14}];
+  XLSX.utils.book_append_sheet(wb, ws, '完整明細');
+  XLSX.writeFile(wb, `${document.getElementById('quoteNo').value}_完整版.xlsx`);
+  showToast('✅ 完整版 Excel 已匯出', 'success');
+}
+
+// ── TOAST ──
+function showToast(msg, type='') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = `toast ${type} show`;
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+</script>
+</body>
+</html>
