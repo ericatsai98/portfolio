@@ -28,7 +28,7 @@
     color: var(--text);
     font-family: 'Noto Serif TC', serif;
     overflow-x: hidden;
-    cursor: none;
+    cursor: auto;
   }
 
   /* Custom cursor */
@@ -41,6 +41,7 @@
     z-index: 9999;
     transform: translate(-50%, -50%);
     transition: width 0.2s, height 0.2s, background 0.2s;
+    display: none;
   }
   .cursor-ring {
     position: fixed;
@@ -51,6 +52,12 @@
     z-index: 9998;
     transform: translate(-50%, -50%);
     transition: all 0.12s ease;
+    display: none;
+  }
+  @media (pointer: fine) {
+    body { cursor: none; }
+    .cursor { display: block; }
+    .cursor-ring { display: block; }
   }
 
   /* Noise texture overlay */
@@ -728,8 +735,8 @@
   <div class="hero-content">
     <p class="hero-tag">數位行政 × AI 工具應用專員</p>
     <h1 class="hero-name">
-      YOUR
-      <span class="line2">NAME.</span>
+      ERICA
+      <span class="line2">TSAI.</span>
     </h1>
     <p class="hero-title">
       以 <strong>行政專業</strong> 為根基，<br>
@@ -818,7 +825,7 @@
           <span class="tag">AI 協作開發</span>
           <span class="tag">Vercel 部署</span>
         </div>
-        <a href="event-quotation.html" target="_blank" class="project-link">查看實際作品 ——→</a>
+        <a href="https://new-repository-all2-0.vercel.app/index.html" target="_blank" class="project-link">查看實際作品 ——→</a>
       </div>
       <div class="project-visual">
         <div class="mock-ui">
