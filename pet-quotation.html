@@ -1,0 +1,996 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PawQuote — 寵物服務報價系統</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --mint: #3ECFB2;
+    --mint-light: #E8FAF7;
+    --mint-mid: #B8EFE6;
+    --coral: #FF7F6B;
+    --coral-light: #FFF0EE;
+    --coral-mid: #FFCCC5;
+    --yellow: #FFD166;
+    --yellow-light: #FFF8E6;
+    --purple: #9B8EF7;
+    --purple-light: #F0EEFF;
+    --bg: #F7FCFA;
+    --white: #FFFFFF;
+    --text: #1A2E2A;
+    --text-mid: #4A6660;
+    --text-light: #8AAAA4;
+    --border: #D5EDE8;
+    --shadow: 0 4px 20px rgba(62,207,178,0.12);
+    --shadow-hover: 0 8px 32px rgba(62,207,178,0.22);
+    --radius: 20px;
+    --radius-sm: 12px;
+  }
+
+  body {
+    font-family: 'Noto Sans TC', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+  }
+
+  /* ── HEADER ── */
+  .header {
+    background: var(--white);
+    border-bottom: 2px solid var(--border);
+    padding: 0 32px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 72px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .logo-icon {
+    width: 44px; height: 44px;
+    background: linear-gradient(135deg, var(--mint), #2AB5A0);
+    border-radius: 14px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 22px;
+    box-shadow: 0 4px 12px rgba(62,207,178,0.35);
+  }
+  .logo-text {
+    font-family: 'Nunito', sans-serif;
+    font-size: 24px;
+    font-weight: 900;
+    color: var(--text);
+    letter-spacing: -0.5px;
+  }
+  .logo-text span { color: var(--mint); }
+  .logo-sub {
+    font-size: 11px;
+    color: var(--text-light);
+    font-weight: 600;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+
+  .header-actions { display: flex; gap: 10px; }
+  .btn { 
+    padding: 10px 20px; border-radius: 12px; border: none; cursor: pointer;
+    font-family: 'Nunito', sans-serif; font-weight: 800; font-size: 14px;
+    transition: all 0.2s; display: flex; align-items: center; gap: 8px;
+  }
+  .btn-outline { 
+    background: transparent; border: 2px solid var(--border); color: var(--text-mid);
+  }
+  .btn-outline:hover { border-color: var(--mint); color: var(--mint); background: var(--mint-light); }
+  .btn-mint { 
+    background: linear-gradient(135deg, var(--mint), #2AB5A0); color: white;
+    box-shadow: 0 4px 14px rgba(62,207,178,0.4);
+  }
+  .btn-mint:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(62,207,178,0.5); }
+  .btn-coral { 
+    background: linear-gradient(135deg, var(--coral), #FF5C45); color: white;
+    box-shadow: 0 4px 14px rgba(255,127,107,0.4);
+  }
+  .btn-coral:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(255,127,107,0.5); }
+
+  /* ── LAYOUT ── */
+  .main { display: grid; grid-template-columns: 400px 1fr; gap: 0; min-height: calc(100vh - 72px); }
+
+  /* ── LEFT PANEL ── */
+  .left-panel {
+    background: var(--white);
+    border-right: 2px solid var(--border);
+    overflow-y: auto;
+    padding: 28px;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+  }
+
+  .section-title {
+    font-family: 'Nunito', sans-serif;
+    font-size: 13px;
+    font-weight: 900;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--text-light);
+    margin-bottom: 14px;
+  }
+
+  /* Client Info */
+  .client-section { }
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .form-group { display: flex; flex-direction: column; gap: 6px; }
+  .form-group.full { grid-column: 1 / -1; }
+  label {
+    font-size: 12px; font-weight: 700; color: var(--text-mid);
+    letter-spacing: 0.5px;
+  }
+  input, select, textarea {
+    border: 2px solid var(--border); border-radius: var(--radius-sm);
+    padding: 10px 14px; font-size: 14px; font-family: 'Noto Sans TC', sans-serif;
+    color: var(--text); background: var(--bg);
+    transition: border-color 0.2s, box-shadow 0.2s;
+    outline: none;
+  }
+  input:focus, select:focus, textarea:focus {
+    border-color: var(--mint); box-shadow: 0 0 0 3px rgba(62,207,178,0.15);
+  }
+  textarea { resize: vertical; min-height: 72px; }
+
+  /* Pet Type */
+  .pet-selector { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+  .pet-card {
+    border: 2px solid var(--border); border-radius: var(--radius-sm);
+    padding: 14px 10px; text-align: center; cursor: pointer;
+    transition: all 0.2s; background: var(--bg);
+  }
+  .pet-card:hover { border-color: var(--mint); background: var(--mint-light); }
+  .pet-card.active { border-color: var(--mint); background: var(--mint-light); box-shadow: 0 0 0 3px rgba(62,207,178,0.2); }
+  .pet-card .emoji { font-size: 28px; display: block; margin-bottom: 6px; }
+  .pet-card .name { font-size: 13px; font-weight: 700; color: var(--text); }
+
+  /* Weight / Fur */
+  .option-pills { display: flex; flex-wrap: wrap; gap: 8px; }
+  .pill {
+    padding: 8px 16px; border-radius: 100px; border: 2px solid var(--border);
+    font-size: 13px; font-weight: 700; cursor: pointer; transition: all 0.2s;
+    background: var(--bg); color: var(--text-mid);
+  }
+  .pill:hover { border-color: var(--mint); color: var(--mint); }
+  .pill.active { background: var(--mint); border-color: var(--mint); color: white; }
+  .pill.coral.active { background: var(--coral); border-color: var(--coral); color: white; }
+  .pill.coral:hover { border-color: var(--coral); color: var(--coral); }
+
+  /* Services */
+  .service-grid { display: flex; flex-direction: column; gap: 10px; }
+  .service-item {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 14px 16px; border-radius: var(--radius-sm);
+    border: 2px solid var(--border); background: var(--bg);
+    cursor: pointer; transition: all 0.2s;
+  }
+  .service-item:hover { border-color: var(--mint-mid); background: var(--mint-light); }
+  .service-item.checked { border-color: var(--mint); background: var(--mint-light); }
+  .service-left { display: flex; align-items: center; gap: 12px; }
+  .service-icon { font-size: 20px; }
+  .service-name { font-size: 14px; font-weight: 700; color: var(--text); }
+  .service-desc { font-size: 12px; color: var(--text-light); margin-top: 2px; }
+  .service-price { font-size: 15px; font-weight: 800; color: var(--mint); font-family: 'Nunito', sans-serif; }
+  .service-check {
+    width: 22px; height: 22px; border-radius: 6px; border: 2px solid var(--border);
+    background: white; display: flex; align-items: center; justify-content: center;
+    font-size: 13px; transition: all 0.2s; flex-shrink: 0;
+  }
+  .service-item.checked .service-check { background: var(--mint); border-color: var(--mint); color: white; }
+
+  /* Add-ons */
+  .addon-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .addon-item {
+    padding: 12px 14px; border-radius: var(--radius-sm);
+    border: 2px solid var(--border); cursor: pointer; transition: all 0.2s;
+    background: var(--bg);
+  }
+  .addon-item:hover { border-color: var(--coral-mid); background: var(--coral-light); }
+  .addon-item.checked { border-color: var(--coral); background: var(--coral-light); }
+  .addon-emoji { font-size: 18px; margin-bottom: 4px; }
+  .addon-name { font-size: 12px; font-weight: 700; color: var(--text); }
+  .addon-price { font-size: 13px; font-weight: 800; color: var(--coral); font-family: 'Nunito', sans-serif; margin-top: 2px; }
+
+  /* Discount */
+  .discount-row { display: flex; align-items: center; gap: 12px; }
+  .discount-row input { flex: 1; }
+  .discount-badge {
+    background: var(--yellow-light); border: 2px solid var(--yellow);
+    border-radius: 10px; padding: 8px 14px;
+    font-size: 13px; font-weight: 800; color: #B8860B; white-space: nowrap;
+  }
+
+  /* ── RIGHT PANEL ── */
+  .right-panel { padding: 28px; overflow-y: auto; display: flex; flex-direction: column; gap: 24px; }
+
+  /* Quote Header */
+  .quote-header {
+    background: linear-gradient(135deg, var(--mint) 0%, #2AB5A0 50%, #1E9E8B 100%);
+    border-radius: var(--radius);
+    padding: 32px;
+    color: white;
+    position: relative;
+    overflow: hidden;
+  }
+  .quote-header::before {
+    content: '🐾';
+    position: absolute; right: 32px; top: 50%; transform: translateY(-50%);
+    font-size: 80px; opacity: 0.15;
+  }
+  .quote-header::after {
+    content: '';
+    position: absolute; bottom: -30px; left: -30px;
+    width: 120px; height: 120px;
+    background: rgba(255,255,255,0.08);
+    border-radius: 50%;
+  }
+  .quote-title {
+    font-family: 'Nunito', sans-serif;
+    font-size: 13px; font-weight: 900; letter-spacing: 2px;
+    text-transform: uppercase; opacity: 0.8; margin-bottom: 8px;
+  }
+  .quote-company { font-family: 'Nunito', sans-serif; font-size: 26px; font-weight: 900; margin-bottom: 4px; }
+  .quote-tagline { font-size: 13px; opacity: 0.75; }
+  .quote-meta {
+    display: flex; gap: 32px; margin-top: 24px;
+  }
+  .quote-meta-item { }
+  .quote-meta-label { font-size: 11px; opacity: 0.7; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; }
+  .quote-meta-value { font-family: 'Nunito', sans-serif; font-size: 16px; font-weight: 800; margin-top: 2px; }
+
+  /* Pet Summary Card */
+  .pet-summary {
+    background: var(--white);
+    border-radius: var(--radius);
+    padding: 24px;
+    border: 2px solid var(--border);
+    display: flex; align-items: center; gap: 20px;
+  }
+  .pet-avatar {
+    width: 64px; height: 64px;
+    background: linear-gradient(135deg, var(--mint-light), var(--mint-mid));
+    border-radius: 18px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 32px; flex-shrink: 0;
+  }
+  .pet-info-name { font-family: 'Nunito', sans-serif; font-size: 20px; font-weight: 900; color: var(--text); }
+  .pet-tags { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
+  .pet-tag {
+    padding: 4px 12px; border-radius: 100px;
+    font-size: 12px; font-weight: 700;
+  }
+  .pet-tag.mint { background: var(--mint-light); color: #1E9E8B; }
+  .pet-tag.coral { background: var(--coral-light); color: #CC4433; }
+  .pet-tag.yellow { background: var(--yellow-light); color: #B8860B; }
+  .pet-tag.purple { background: var(--purple-light); color: #6B5ED4; }
+
+  /* Service Table */
+  .quote-card {
+    background: var(--white);
+    border-radius: var(--radius);
+    border: 2px solid var(--border);
+    overflow: hidden;
+  }
+  .quote-card-header {
+    padding: 18px 24px;
+    background: var(--bg);
+    border-bottom: 2px solid var(--border);
+    display: flex; align-items: center; gap: 10px;
+  }
+  .quote-card-header h3 {
+    font-family: 'Nunito', sans-serif; font-size: 16px; font-weight: 900; color: var(--text);
+  }
+  .quote-card-body { padding: 0; }
+
+  .line-item {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 16px 24px;
+    border-bottom: 1px solid var(--border);
+    transition: background 0.15s;
+  }
+  .line-item:last-child { border-bottom: none; }
+  .line-item:hover { background: var(--bg); }
+  .line-item-left { display: flex; align-items: center; gap: 12px; }
+  .line-emoji { font-size: 18px; }
+  .line-name { font-size: 14px; font-weight: 700; color: var(--text); }
+  .line-sub { font-size: 12px; color: var(--text-light); margin-top: 2px; }
+  .line-amount { font-family: 'Nunito', sans-serif; font-size: 16px; font-weight: 800; color: var(--text); }
+  .line-item.addon .line-amount { color: var(--coral); }
+  .line-item.discount .line-amount { color: var(--purple); }
+
+  /* Total */
+  .total-card {
+    background: linear-gradient(135deg, #FFF8F0, #FFF0EE);
+    border-radius: var(--radius);
+    border: 2px solid var(--coral-mid);
+    padding: 28px 32px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .total-left { }
+  .total-label { font-size: 13px; font-weight: 700; color: var(--text-mid); letter-spacing: 0.5px; }
+  .total-sub { font-size: 12px; color: var(--text-light); margin-top: 4px; }
+  .total-amount {
+    font-family: 'Nunito', sans-serif;
+    font-size: 48px; font-weight: 900;
+    color: var(--coral);
+    letter-spacing: -2px;
+    line-height: 1;
+  }
+  .total-currency { font-size: 20px; font-weight: 800; vertical-align: super; margin-right: 4px; }
+
+  /* Notes */
+  .notes-card {
+    background: var(--yellow-light);
+    border: 2px solid var(--yellow);
+    border-radius: var(--radius);
+    padding: 20px 24px;
+  }
+  .notes-card h4 { font-family: 'Nunito', sans-serif; font-size: 14px; font-weight: 900; color: #B8860B; margin-bottom: 10px; }
+  .notes-card textarea {
+    background: transparent; border-color: #FFD166; width: 100%;
+    color: var(--text);
+  }
+  .notes-card textarea:focus { border-color: #FFB700; box-shadow: 0 0 0 3px rgba(255,209,102,0.25); }
+
+  /* Floating total bar */
+  .stat-bar {
+    background: var(--white);
+    border-top: 2px solid var(--border);
+    padding: 16px 28px;
+    display: flex; align-items: center; gap: 24px;
+    position: sticky; bottom: 0; z-index: 50;
+  }
+  .stat-item { display: flex; flex-direction: column; }
+  .stat-label { font-size: 11px; color: var(--text-light); font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase; }
+  .stat-value { font-family: 'Nunito', sans-serif; font-size: 18px; font-weight: 900; color: var(--text); }
+  .stat-value.mint { color: var(--mint); }
+  .stat-value.coral { color: var(--coral); }
+  .stat-divider { width: 1px; height: 32px; background: var(--border); }
+
+  /* Empty state */
+  .empty-state {
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    padding: 48px; text-align: center; color: var(--text-light);
+    gap: 12px;
+  }
+  .empty-state .empty-icon { font-size: 48px; }
+  .empty-state p { font-size: 14px; }
+
+  .divider { height: 1px; background: var(--border); margin: 4px 0; }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--mint-mid); border-radius: 10px; }
+
+  @media (max-width: 900px) {
+    .main { grid-template-columns: 1fr; }
+    .left-panel { border-right: none; border-bottom: 2px solid var(--border); }
+  }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header class="header">
+  <div class="logo">
+    <div class="logo-icon">🐾</div>
+    <div>
+      <div class="logo-text">Paw<span>Quote</span></div>
+      <div class="logo-sub">寵物服務報價系統</div>
+    </div>
+  </div>
+  <div class="header-actions">
+    <button class="btn btn-outline" onclick="clearAll()">🗑 清除</button>
+    <button class="btn btn-outline" onclick="exportExcel('client')">📄 客戶版 Excel</button>
+    <button class="btn btn-coral" onclick="exportExcel('full')">💾 完整版 Excel</button>
+  </div>
+</header>
+
+<!-- STAT BAR -->
+<div class="stat-bar">
+  <div class="stat-item">
+    <span class="stat-label">基本服務</span>
+    <span class="stat-value mint" id="bar-base">NT$ 0</span>
+  </div>
+  <div class="stat-divider"></div>
+  <div class="stat-item">
+    <span class="stat-label">加購項目</span>
+    <span class="stat-value coral" id="bar-addon">NT$ 0</span>
+  </div>
+  <div class="stat-divider"></div>
+  <div class="stat-item">
+    <span class="stat-label">折扣</span>
+    <span class="stat-value" id="bar-disc" style="color:var(--purple)">- NT$ 0</span>
+  </div>
+  <div class="stat-divider"></div>
+  <div class="stat-item">
+    <span class="stat-label">本次合計</span>
+    <span class="stat-value coral" id="bar-total">NT$ 0</span>
+  </div>
+  <div style="margin-left:auto; display:flex; gap:10px;">
+    <button class="btn btn-mint" onclick="exportExcel('client')">⬇ 匯出報價單</button>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div class="main">
+
+  <!-- LEFT: INPUT PANEL -->
+  <div class="left-panel">
+
+    <!-- 客戶資訊 -->
+    <div class="client-section">
+      <div class="section-title">👤 飼主資訊</div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>飼主姓名</label>
+          <input type="text" id="owner-name" placeholder="王小明" oninput="updateQuote()">
+        </div>
+        <div class="form-group">
+          <label>聯絡電話</label>
+          <input type="text" id="owner-phone" placeholder="0912-345-678" oninput="updateQuote()">
+        </div>
+        <div class="form-group">
+          <label>報價日期</label>
+          <input type="date" id="quote-date" oninput="updateQuote()">
+        </div>
+        <div class="form-group">
+          <label>預約時段</label>
+          <input type="text" id="appt-time" placeholder="14:00–16:00" oninput="updateQuote()">
+        </div>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- 寵物資訊 -->
+    <div>
+      <div class="section-title">🐶 寵物種類</div>
+      <div class="pet-selector">
+        <div class="pet-card active" data-pet="dog" onclick="selectPet(this,'dog')">
+          <span class="emoji">🐕</span><span class="name">狗狗</span>
+        </div>
+        <div class="pet-card" data-pet="cat" onclick="selectPet(this,'cat')">
+          <span class="emoji">🐈</span><span class="name">貓咪</span>
+        </div>
+        <div class="pet-card" data-pet="rabbit" onclick="selectPet(this,'rabbit')">
+          <span class="emoji">🐇</span><span class="name">兔子</span>
+        </div>
+        <div class="pet-card" data-pet="bird" onclick="selectPet(this,'bird')">
+          <span class="emoji">🦜</span><span class="name">鳥類</span>
+        </div>
+        <div class="pet-card" data-pet="hamster" onclick="selectPet(this,'hamster')">
+          <span class="emoji">🐹</span><span class="name">倉鼠</span>
+        </div>
+        <div class="pet-card" data-pet="other" onclick="selectPet(this,'other')">
+          <span class="emoji">🦔</span><span class="name">其他</span>
+        </div>
+      </div>
+      <div class="form-row" style="margin-top:12px">
+        <div class="form-group">
+          <label>寵物名字</label>
+          <input type="text" id="pet-name" placeholder="小白" oninput="updateQuote()">
+        </div>
+        <div class="form-group">
+          <label>品種</label>
+          <input type="text" id="pet-breed" placeholder="柴犬" oninput="updateQuote()">
+        </div>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- 體重 -->
+    <div>
+      <div class="section-title">⚖️ 體重區間</div>
+      <div class="option-pills" id="weight-pills">
+        <div class="pill active" data-weight="mini" data-surcharge="0" onclick="selectPill(this,'weight')">迷你 &lt;3kg</div>
+        <div class="pill" data-weight="small" data-surcharge="100" onclick="selectPill(this,'weight')">小型 3–8kg</div>
+        <div class="pill" data-weight="medium" data-surcharge="200" onclick="selectPill(this,'weight')">中型 8–15kg</div>
+        <div class="pill" data-weight="large" data-surcharge="350" onclick="selectPill(this,'weight')">大型 15–25kg</div>
+        <div class="pill" data-weight="giant" data-surcharge="500" onclick="selectPill(this,'weight')">超大 &gt;25kg</div>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- 毛髮狀況 -->
+    <div>
+      <div class="section-title">✂️ 毛髮狀況</div>
+      <div class="option-pills" id="fur-pills">
+        <div class="pill active coral" data-fur="short" data-surcharge="0" onclick="selectPill(this,'fur')">短毛</div>
+        <div class="pill coral" data-fur="medium" data-surcharge="100" onclick="selectPill(this,'fur')">中長毛</div>
+        <div class="pill coral" data-fur="long" data-surcharge="200" onclick="selectPill(this,'fur')">長毛</div>
+        <div class="pill coral" data-fur="double" data-surcharge="300" onclick="selectPill(this,'fur')">雙層毛</div>
+        <div class="pill coral" data-fur="matted" data-surcharge="500" onclick="selectPill(this,'fur')">嚴重打結</div>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- 主要服務 -->
+    <div>
+      <div class="section-title">🛁 主要服務（可複選）</div>
+      <div class="service-grid">
+        <div class="service-item" data-price="800" onclick="toggleService(this)">
+          <div class="service-left">
+            <span class="service-icon">🛁</span>
+            <div>
+              <div class="service-name">全套美容</div>
+              <div class="service-desc">洗澡、吹乾、剪毛造型</div>
+            </div>
+          </div>
+          <div style="display:flex;align-items:center;gap:12px">
+            <span class="service-price">NT$ 800+</span>
+            <div class="service-check"></div>
+          </div>
+        </div>
+        <div class="service-item" data-price="400" onclick="toggleService(this)">
+          <div class="service-left">
+            <span class="service-icon">🚿</span>
+            <div>
+              <div class="service-name">洗澡吹乾</div>
+              <div class="service-desc">含基礎梳理</div>
+            </div>
+          </div>
+          <div style="display:flex;align-items:center;gap:12px">
+            <span class="service-price">NT$ 400+</span>
+            <div class="service-check"></div>
+          </div>
+        </div>
+        <div class="service-item" data-price="300" onclick="toggleService(this)">
+          <div class="service-left">
+            <span class="service-icon">✂️</span>
+            <div>
+              <div class="service-name">造型剪毛</div>
+              <div class="service-desc">依指定造型修剪</div>
+            </div>
+          </div>
+          <div style="display:flex;align-items:center;gap:12px">
+            <span class="service-price">NT$ 300+</span>
+            <div class="service-check"></div>
+          </div>
+        </div>
+        <div class="service-item" data-price="600" onclick="toggleService(this)">
+          <div class="service-left">
+            <span class="service-icon">🏨</span>
+            <div>
+              <div class="service-name">寵物寄宿</div>
+              <div class="service-desc">含餵食、散步（每日）</div>
+            </div>
+          </div>
+          <div style="display:flex;align-items:center;gap:12px">
+            <span class="service-price">NT$ 600+</span>
+            <div class="service-check"></div>
+          </div>
+        </div>
+        <div class="service-item" data-price="500" onclick="toggleService(this)">
+          <div class="service-left">
+            <span class="service-icon">🎓</span>
+            <div>
+              <div class="service-name">行為訓練</div>
+              <div class="service-desc">基礎指令（45分鐘/堂）</div>
+            </div>
+          </div>
+          <div style="display:flex;align-items:center;gap:12px">
+            <span class="service-price">NT$ 500+</span>
+            <div class="service-check"></div>
+          </div>
+        </div>
+        <div class="service-item" data-price="200" onclick="toggleService(this)">
+          <div class="service-left">
+            <span class="service-icon">🏃</span>
+            <div>
+              <div class="service-name">遛狗服務</div>
+              <div class="service-desc">30分鐘外出散步</div>
+            </div>
+          </div>
+          <div style="display:flex;align-items:center;gap:12px">
+            <span class="service-price">NT$ 200</span>
+            <div class="service-check"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- 加購項目 -->
+    <div>
+      <div class="section-title">✨ 加購項目（可複選）</div>
+      <div class="addon-grid">
+        <div class="addon-item" data-price="150" onclick="toggleAddon(this)">
+          <div class="addon-emoji">💅</div>
+          <div class="addon-name">磨指甲</div>
+          <div class="addon-price">+ NT$ 150</div>
+        </div>
+        <div class="addon-item" data-price="120" onclick="toggleAddon(this)">
+          <div class="addon-emoji">👂</div>
+          <div class="addon-name">清耳朵</div>
+          <div class="addon-price">+ NT$ 120</div>
+        </div>
+        <div class="addon-item" data-price="200" onclick="toggleAddon(this)">
+          <div class="addon-emoji">🦷</div>
+          <div class="addon-name">潔牙護理</div>
+          <div class="addon-price">+ NT$ 200</div>
+        </div>
+        <div class="addon-item" data-price="180" onclick="toggleAddon(this)">
+          <div class="addon-emoji">🌸</div>
+          <div class="addon-name">香氛噴霧</div>
+          <div class="addon-price">+ NT$ 180</div>
+        </div>
+        <div class="addon-item" data-price="250" onclick="toggleAddon(this)">
+          <div class="addon-emoji">💊</div>
+          <div class="addon-name">蚤蟲預防</div>
+          <div class="addon-price">+ NT$ 250</div>
+        </div>
+        <div class="addon-item" data-price="300" onclick="toggleAddon(this)">
+          <div class="addon-emoji">📸</div>
+          <div class="addon-name">寵物寫真</div>
+          <div class="addon-price">+ NT$ 300</div>
+        </div>
+        <div class="addon-item" data-price="150" onclick="toggleAddon(this)">
+          <div class="addon-emoji">🎀</div>
+          <div class="addon-name">造型配件</div>
+          <div class="addon-price">+ NT$ 150</div>
+        </div>
+        <div class="addon-item" data-price="350" onclick="toggleAddon(this)">
+          <div class="addon-emoji">🚗</div>
+          <div class="addon-name">到府接送</div>
+          <div class="addon-price">+ NT$ 350</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- 折扣 -->
+    <div>
+      <div class="section-title">🏷 折扣優惠</div>
+      <div class="discount-row">
+        <input type="number" id="discount" placeholder="輸入折扣金額" min="0" oninput="updateQuote()">
+        <div class="discount-badge" id="disc-badge">折扣 NT$ 0</div>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- 備注 -->
+    <div>
+      <div class="section-title">📝 內部備注（不列入客戶版）</div>
+      <textarea id="internal-note" placeholder="特殊注意事項、健康狀況、飼主偏好..." oninput="updateQuote()"></textarea>
+    </div>
+
+  </div><!-- end left-panel -->
+
+  <!-- RIGHT: QUOTE PREVIEW -->
+  <div class="right-panel">
+
+    <!-- Quote Header -->
+    <div class="quote-header">
+      <div class="quote-title">服務報價單</div>
+      <div class="quote-company" id="q-company">PawQuote 寵物服務</div>
+      <div class="quote-tagline">專業 · 溫柔 · 值得信賴</div>
+      <div class="quote-meta">
+        <div class="quote-meta-item">
+          <div class="quote-meta-label">飼主</div>
+          <div class="quote-meta-value" id="q-owner">—</div>
+        </div>
+        <div class="quote-meta-item">
+          <div class="quote-meta-label">報價日期</div>
+          <div class="quote-meta-value" id="q-date">—</div>
+        </div>
+        <div class="quote-meta-item">
+          <div class="quote-meta-label">預約時段</div>
+          <div class="quote-meta-value" id="q-appt">—</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Pet Summary -->
+    <div class="pet-summary">
+      <div class="pet-avatar" id="q-pet-avatar">🐕</div>
+      <div>
+        <div class="pet-info-name" id="q-pet-name">尚未填寫寵物資訊</div>
+        <div class="pet-tags" id="q-pet-tags">
+          <span class="pet-tag mint">請在左側填寫</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Services -->
+    <div class="quote-card" id="services-card">
+      <div class="quote-card-header">
+        <span>🛁</span>
+        <h3>主要服務項目</h3>
+      </div>
+      <div class="quote-card-body" id="services-list">
+        <div class="empty-state">
+          <div class="empty-icon">🐾</div>
+          <p>請在左側選擇服務項目</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Addons -->
+    <div class="quote-card" id="addons-card">
+      <div class="quote-card-header">
+        <span>✨</span>
+        <h3>加購項目</h3>
+      </div>
+      <div class="quote-card-body" id="addons-list">
+        <div class="empty-state">
+          <div class="empty-icon">💝</div>
+          <p>尚未選擇加購項目</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Total -->
+    <div class="total-card">
+      <div class="total-left">
+        <div class="total-label">本次服務費用合計</div>
+        <div class="total-sub" id="total-breakdown">基本服務 NT$0 + 附加費用 NT$0</div>
+      </div>
+      <div class="total-amount">
+        <span class="total-currency">NT$</span><span id="total-amount">0</span>
+      </div>
+    </div>
+
+    <!-- Notes -->
+    <div class="notes-card">
+      <h4>📋 服務備注 / 注意事項</h4>
+      <textarea id="client-note" placeholder="服務完成後的叮嚀、下次預約建議..." oninput="updateQuote()"></textarea>
+    </div>
+
+  </div><!-- end right-panel -->
+
+</div><!-- end main -->
+
+<script>
+  // ── STATE ──
+  let state = {
+    petType: 'dog',
+    weightSurcharge: 0,
+    furSurcharge: 0,
+    services: [],     // {name, emoji, price, adjusted}
+    addons: [],       // {name, emoji, price}
+    discount: 0
+  };
+
+  const PET_EMOJI = { dog:'🐕', cat:'🐈', rabbit:'🐇', bird:'🦜', hamster:'🐹', other:'🦔' };
+  const PET_NAME  = { dog:'狗狗', cat:'貓咪', rabbit:'兔子', bird:'鳥類', hamster:'倉鼠', other:'其他' };
+  const WEIGHT_LABEL = { mini:'迷你（<3kg）', small:'小型（3–8kg）', medium:'中型（8–15kg）', large:'大型（15–25kg）', giant:'超大（>25kg）' };
+  const FUR_LABEL    = { short:'短毛', medium:'中長毛', long:'長毛', double:'雙層毛', matted:'嚴重打結' };
+
+  // Set today's date
+  document.getElementById('quote-date').value = new Date().toISOString().slice(0,10);
+
+  function selectPet(el, type) {
+    document.querySelectorAll('.pet-card').forEach(c => c.classList.remove('active'));
+    el.classList.add('active');
+    state.petType = type;
+    updateQuote();
+  }
+
+  function selectPill(el, group) {
+    const container = document.getElementById(group + '-pills') || el.closest('.option-pills');
+    el.closest('.option-pills').querySelectorAll('.pill').forEach(p => p.classList.remove('active'));
+    el.classList.add('active');
+    if (group === 'weight') state.weightSurcharge = parseInt(el.dataset.surcharge);
+    if (group === 'fur')    state.furSurcharge    = parseInt(el.dataset.surcharge);
+    updateQuote();
+  }
+
+  function toggleService(el) {
+    el.classList.toggle('checked');
+    const price = parseInt(el.dataset.price);
+    const name  = el.querySelector('.service-name').textContent;
+    const emoji = el.querySelector('.service-icon').textContent;
+    const adjusted = price + state.weightSurcharge + state.furSurcharge;
+    if (el.classList.contains('checked')) {
+      state.services.push({ name, emoji, base: price, adjusted });
+    } else {
+      state.services = state.services.filter(s => s.name !== name);
+    }
+    updateQuote();
+  }
+
+  function toggleAddon(el) {
+    el.classList.toggle('checked');
+    const price = parseInt(el.dataset.price);
+    const name  = el.querySelector('.addon-name').textContent;
+    const emoji = el.querySelector('.addon-emoji').textContent;
+    if (el.classList.contains('checked')) {
+      state.addons.push({ name, emoji, price });
+    } else {
+      state.addons = state.addons.filter(a => a.name !== name);
+    }
+    updateQuote();
+  }
+
+  function updateQuote() {
+    // Recalculate service prices with current surcharges
+    document.querySelectorAll('.service-item.checked').forEach(el => {
+      const price = parseInt(el.dataset.price);
+      const name  = el.querySelector('.service-name').textContent;
+      const idx = state.services.findIndex(s => s.name === name);
+      if (idx > -1) {
+        state.services[idx].adjusted = price + state.weightSurcharge + state.furSurcharge;
+      }
+    });
+
+    state.discount = parseInt(document.getElementById('discount').value) || 0;
+    document.getElementById('disc-badge').textContent = `折扣 NT$ ${state.discount.toLocaleString()}`;
+
+    // Totals
+    const baseTotal  = state.services.reduce((s, x) => s + x.adjusted, 0);
+    const addonTotal = state.addons.reduce((s, x) => s + x.price, 0);
+    const total      = Math.max(0, baseTotal + addonTotal - state.discount);
+
+    // Stat bar
+    document.getElementById('bar-base').textContent  = `NT$ ${baseTotal.toLocaleString()}`;
+    document.getElementById('bar-addon').textContent = `NT$ ${addonTotal.toLocaleString()}`;
+    document.getElementById('bar-disc').textContent  = `- NT$ ${state.discount.toLocaleString()}`;
+    document.getElementById('bar-total').textContent = `NT$ ${total.toLocaleString()}`;
+
+    // Header
+    const ownerName = document.getElementById('owner-name').value || '—';
+    const dateVal   = document.getElementById('quote-date').value;
+    const apptVal   = document.getElementById('appt-time').value || '—';
+    document.getElementById('q-owner').textContent = ownerName;
+    document.getElementById('q-date').textContent  = dateVal ? new Date(dateVal).toLocaleDateString('zh-TW') : '—';
+    document.getElementById('q-appt').textContent  = apptVal;
+
+    // Pet summary
+    const petName  = document.getElementById('pet-name').value  || PET_NAME[state.petType];
+    const petBreed = document.getElementById('pet-breed').value || '';
+    document.getElementById('q-pet-avatar').textContent  = PET_EMOJI[state.petType];
+    document.getElementById('q-pet-name').textContent    = petName + (petBreed ? ` · ${petBreed}` : '');
+
+    const weightEl = document.querySelector('#weight-pills .pill.active');
+    const furEl    = document.querySelector('#fur-pills .pill.active');
+    const wLabel   = weightEl ? WEIGHT_LABEL[weightEl.dataset.weight] : '';
+    const fLabel   = furEl    ? FUR_LABEL[furEl.dataset.fur]          : '';
+    document.getElementById('q-pet-tags').innerHTML = `
+      <span class="pet-tag mint">${PET_NAME[state.petType]}</span>
+      ${wLabel ? `<span class="pet-tag yellow">${wLabel}</span>` : ''}
+      ${fLabel ? `<span class="pet-tag coral">${fLabel}</span>` : ''}
+    `;
+
+    // Services list
+    const svcList = document.getElementById('services-list');
+    if (state.services.length === 0) {
+      svcList.innerHTML = `<div class="empty-state"><div class="empty-icon">🐾</div><p>請在左側選擇服務項目</p></div>`;
+    } else {
+      svcList.innerHTML = state.services.map(s => `
+        <div class="line-item">
+          <div class="line-item-left">
+            <span class="line-emoji">${s.emoji}</span>
+            <div>
+              <div class="line-name">${s.name}</div>
+              <div class="line-sub">基本價 NT$${s.base.toLocaleString()} ${state.weightSurcharge||state.furSurcharge ? `+ 體型/毛質附加 NT$${(state.weightSurcharge+state.furSurcharge).toLocaleString()}` : ''}</div>
+            </div>
+          </div>
+          <div class="line-amount">NT$ ${s.adjusted.toLocaleString()}</div>
+        </div>
+      `).join('');
+    }
+
+    // Addons list
+    const addList = document.getElementById('addons-list');
+    if (state.addons.length === 0) {
+      addList.innerHTML = `<div class="empty-state"><div class="empty-icon">💝</div><p>尚未選擇加購項目</p></div>`;
+    } else {
+      addList.innerHTML = state.addons.map(a => `
+        <div class="line-item addon">
+          <div class="line-item-left">
+            <span class="line-emoji">${a.emoji}</span>
+            <div class="line-name">${a.name}</div>
+          </div>
+          <div class="line-amount">NT$ ${a.price.toLocaleString()}</div>
+        </div>
+      `).join('');
+      if (state.discount > 0) {
+        addList.innerHTML += `
+          <div class="line-item discount">
+            <div class="line-item-left">
+              <span class="line-emoji">🏷</span>
+              <div class="line-name">折扣優惠</div>
+            </div>
+            <div class="line-amount">- NT$ ${state.discount.toLocaleString()}</div>
+          </div>`;
+      }
+    }
+
+    // Total
+    document.getElementById('total-amount').textContent = total.toLocaleString();
+    document.getElementById('total-breakdown').textContent =
+      `主要服務 NT$${baseTotal.toLocaleString()} + 加購 NT$${addonTotal.toLocaleString()}${state.discount ? ` − 折扣 NT$${state.discount.toLocaleString()}` : ''}`;
+  }
+
+  function clearAll() {
+    if (!confirm('確定要清除所有填寫內容？')) return;
+    document.querySelectorAll('input[type=text], input[type=number]').forEach(el => el.value = '');
+    document.getElementById('quote-date').value = new Date().toISOString().slice(0,10);
+    document.querySelectorAll('textarea').forEach(el => el.value = '');
+    document.querySelectorAll('.service-item').forEach(el => el.classList.remove('checked'));
+    document.querySelectorAll('.addon-item').forEach(el => el.classList.remove('checked'));
+    document.querySelectorAll('#weight-pills .pill').forEach((el,i) => el.classList.toggle('active', i===0));
+    document.querySelectorAll('#fur-pills .pill').forEach((el,i) => el.classList.toggle('active', i===0));
+    state = { petType: state.petType, weightSurcharge:0, furSurcharge:0, services:[], addons:[], discount:0 };
+    updateQuote();
+  }
+
+  function exportExcel(type) {
+    const ownerName  = document.getElementById('owner-name').value || '飼主';
+    const ownerPhone = document.getElementById('owner-phone').value || '';
+    const petName    = document.getElementById('pet-name').value  || '寵物';
+    const petBreed   = document.getElementById('pet-breed').value || '';
+    const dateVal    = document.getElementById('quote-date').value || new Date().toISOString().slice(0,10);
+    const apptTime   = document.getElementById('appt-time').value || '';
+    const clientNote = document.getElementById('client-note').value || '';
+    const internalNote = document.getElementById('internal-note').value || '';
+
+    const weightEl = document.querySelector('#weight-pills .pill.active');
+    const furEl    = document.querySelector('#fur-pills .pill.active');
+
+    const baseTotal  = state.services.reduce((s, x) => s + x.adjusted, 0);
+    const addonTotal = state.addons.reduce((s, x) => s + x.price, 0);
+    const total      = Math.max(0, baseTotal + addonTotal - state.discount);
+
+    const rows = [
+      ['PawQuote 寵物服務報價單', '', '', ''],
+      ['', '', '', ''],
+      ['飼主姓名', ownerName, '聯絡電話', ownerPhone],
+      ['寵物名字', `${petName}（${PET_NAME[state.petType]}${petBreed ? '·'+petBreed : ''}）`, '報價日期', new Date(dateVal).toLocaleDateString('zh-TW')],
+      ['體型', weightEl ? WEIGHT_LABEL[weightEl.dataset.weight] : '', '預約時段', apptTime],
+      ['毛髮狀況', furEl ? FUR_LABEL[furEl.dataset.fur] : '', '', ''],
+      ['', '', '', ''],
+      ['── 主要服務 ──', '', '', ''],
+      ['項目', '基本價', '附加費用', '小計'],
+      ...state.services.map(s => [s.name, s.base, state.weightSurcharge+state.furSurcharge, s.adjusted]),
+      ['', '', '', ''],
+      ['── 加購項目 ──', '', '', ''],
+      ['項目', '金額', '', ''],
+      ...state.addons.map(a => [a.name, a.price, '', '']),
+      ['', '', '', ''],
+      ['主要服務小計', baseTotal, '', ''],
+      ['加購項目小計', addonTotal, '', ''],
+      state.discount > 0 ? ['折扣優惠', -state.discount, '', ''] : null,
+      ['本次費用合計', total, '', ''],
+      ['', '', '', ''],
+      ['備注', clientNote, '', ''],
+    ].filter(Boolean);
+
+    if (type === 'full') rows.push(['內部備注（勿給客戶）', internalNote, '', '']);
+
+    const wb = XLSX.utils.book_new();
+    const ws = XLSX.utils.aoa_to_sheet(rows);
+    ws['!cols'] = [{wch:24},{wch:18},{wch:18},{wch:14}];
+    XLSX.utils.book_append_sheet(wb, ws, '報價單');
+    const suffix = type === 'full' ? '完整版' : '客戶版';
+    XLSX.writeFile(wb, `PawQuote_${ownerName}_${petName}_${suffix}_${dateVal}.xlsx`);
+  }
+
+  // Init
+  updateQuote();
+</script>
+</body>
+</html>
